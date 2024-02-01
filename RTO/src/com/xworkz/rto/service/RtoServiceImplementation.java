@@ -2,6 +2,7 @@ package com.xworkz.rto.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
@@ -19,14 +20,17 @@ import com.xworkz.rto.entity.RtoEntity;
 import com.xworkz.rto.entity.UserEntity;
 import com.xworkz.rto.repository.RtoRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
 
 @Service
+@Slf4j
 public class RtoServiceImplementation implements RtoService {
 	@Autowired
 	RtoRepository repo;
 
 	public RtoServiceImplementation() {
-		System.out.println("this is RtoServiceImplementation");
+		log.info("this is RtoServiceImplementation");
 	}
 
 	@Override
@@ -36,9 +40,10 @@ public class RtoServiceImplementation implements RtoService {
 		Set<ConstraintViolation<RtoDto>> voilations = valid.validate(dto);
 		if (voilations.isEmpty()) {
 			repo.onSave(dto);
-			System.out.println("Data saved succesfully....");
+			System.err.println("###################"+dto);
+			log.info("Data saved succesfully....");
 		} else {
-			System.out.println("Voilations are present" + voilations);
+			log.info("Voilations are present" + voilations);
 			return voilations;
 		}
 		return voilations;
@@ -47,17 +52,15 @@ public class RtoServiceImplementation implements RtoService {
 	
 	@Override
 	public boolean onSave(UserDto udto) {
-		
-		  int randomNumber = (int) ((Math.random()*800)); String
+		int randomNumber = (int) ((Math.random()*800)); String
 		  otp=String.valueOf(randomNumber); String code=null;
 		  if (udto.getState().equals("Karnataka")) {
 		  code="KA2023LLR" + otp; } udto.setApplicationNumber(code);
 		 
 		repo.onSave(udto);
-		System.out.println(udto);
+		log.debug("udto{}"+udto);
 		return true;
-		
-		
+			
 	}
 
 	@Override
@@ -68,12 +71,12 @@ public class RtoServiceImplementation implements RtoService {
 		List<RtoDto> dtoList = new ArrayList<RtoDto>();
 
 		for (RtoEntity en : entityList) {
-			System.out.println(en);
+			log.debug("{}"+en);
 			RtoDto dto = new RtoDto();
 			BeanUtils.copyProperties(en, dto);
 			dtoList.add(dto);
 		}
-		System.out.println(dtoList.toString());
+		log.info(dtoList.toString());
 		return dtoList;
 	}
 	
@@ -99,7 +102,7 @@ public class RtoServiceImplementation implements RtoService {
 				if (dto.getEmail().equals(email) && dto.getPassword().equals(password)) {
 					return dto;
 				} else {
-					System.out.println("Invalid email or password");
+					log.info("Invalid email or password");
 					return null;
 				}
 			//} else {
@@ -120,16 +123,18 @@ public class RtoServiceImplementation implements RtoService {
 				BeanUtils.copyProperties(entity, dto);
 				if (dto.getEmail().equals(email) && dto.getOtp().equals(otp)) {
 					return dto;
+
+				
 				} else {
-					System.out.println("Invalid email or otp");
+					log.info("Invalid email or otp");
 					return null;
 				}
 			} else {
-				System.out.println("Entity is null");
+				log.info("Entity is null");
 				return null;
 			}
 		} else {
-			System.out.println("email or otp is null");
+			log.info("email or otp is null");
 		return null;
 	}
 }
@@ -144,15 +149,15 @@ public class RtoServiceImplementation implements RtoService {
 				if (dto.getEmail().equals(email) && dto.getOtp().equals(otp)) {
 					return dto;
 				} else {
-					System.out.println("Invalid email or otp");
+					log.info("Invalid email or otp");
 					return null;
 				}
 			} else {
-				System.out.println("Entity is null");
+				log.info("Entity is null");
 				return null;
 			}
 		} else {
-			System.out.println("email or otp is null");
+			log.info("email or otp is null");
 		return null;
 	}
 }
@@ -167,15 +172,15 @@ public class RtoServiceImplementation implements RtoService {
 				if(udto.getApplicationNumber().equals(apporphone) && udto.getDob().equals(dob)) {
 					return udto;
 				}else {
-					System.out.println("Invalid login credentials");
+					log.info("Invalid login credentials");
 					return null;
 					}
 		}else {
-			System.out.println("Entity is null");
+			log.info("Entity is null");
 			return null;
 		}
 		}else {
-			System.out.println("credentials are null");
+			log.info("credentials are null");
 		return null;
 	}
 	}
@@ -183,28 +188,28 @@ public class RtoServiceImplementation implements RtoService {
 	@Override
 	public List<RtoDto> searchByState(String state) {
 		
-		System.out.println("search by state:"+state);
+		log.info("search by state:"+state);
 		List<RtoEntity> entityList=repo.searchByState(state);
 		
 List<RtoDto> dtoList=new ArrayList<RtoDto>();
 		
 		for(RtoEntity en:entityList) {
-			System.out.println(en);
+			log.debug("{}"+en);
 			RtoDto dto=new RtoDto();
 			BeanUtils.copyProperties(en,dto );
 			dtoList.add(dto);
 		}
-		System.out.println(dtoList.toString());
+		log.info(dtoList.toString());
 		return dtoList;
 	}
 
 	@Override
 	public List<UserDto> searchByUserState(String state) {
-		System.out.println("search by state:"+state);
+		log.info("search by state:"+state);
 		List<UserEntity> entityList=repo.searchByUserState(state);
 		List<UserDto> udtoList=new ArrayList<UserDto>();
 		for(UserEntity uen:entityList) {
-			System.out.println(uen);
+			log.debug("{}"+uen);
 			UserDto udto=new UserDto();
 			BeanUtils.copyProperties(uen,udto );
 			udtoList.add(udto);
@@ -243,6 +248,46 @@ List<RtoDto> dtoList=new ArrayList<RtoDto>();
 		
 		return passwordUpdate;
 	}
+
+	@Override
+	public boolean updateLoginCount(RtoDto rtoDto) {
+		boolean logincount=repo.updateLoginCount(rtoDto);
+		return logincount;
+	}
+	
+	
+	
+	public UserDto dlEntry(String applicationNumber) {
+		if(applicationNumber!=null) {
+			UserEntity uentity=repo.dlEntry(applicationNumber);
+			if(uentity!=null) {
+				UserDto udto=new UserDto();
+				BeanUtils.copyProperties(uentity, udto);
+				if(udto.getApplicationNumber().equals(applicationNumber)) {
+					return udto;
+				}else {
+					log.info("Invalid login credentials");
+					return null;
+					}
+		}else {
+			log.info("Entity is null");
+			return null;
+		}
+		}else {
+			log.info("credentials are null");
+		return null;
+	}
+	}
+
+	@Override
+	public UserDto findApplication(String applicationNumber) {
+		UserEntity entity=repo.findApplication(applicationNumber);
+		UserDto dto=new UserDto();
+		BeanUtils.copyProperties(entity, dto);
+		return dto;
+	}
+
+	
 	
 	/*public RtoDto checkotp(String email, String otp) {
 		RtoEntity entity = repo.checkLogin(email, otp);

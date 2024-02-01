@@ -1,8 +1,18 @@
 package com.xworkz.rto.controller;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
 
 import org.omg.CORBA.PUBLIC_MEMBER;
@@ -10,12 +20,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.xworkz.rto.dto.DlDto;
 import com.xworkz.rto.dto.RtoDto;
 import com.xworkz.rto.dto.UserDto;
 import com.xworkz.rto.mail.RtoMail;
@@ -23,9 +35,11 @@ import com.xworkz.rto.mail.RtoMailImpl;
 import com.xworkz.rto.service.RtoService;
 
 import io.quarkus.runtime.Application;
+import lombok.extern.slf4j.Slf4j;
 
 @Controller
 @RequestMapping("/")
+@Slf4j
 public class RtoController {
 	
 	@Autowired
@@ -34,13 +48,17 @@ public class RtoController {
 	@Autowired
 	RtoMail rtoMail;
 	
+	
 public RtoController() {
-System.out.println("RtoController");
+log.info("RtoController");
 }
+
 
 @PostMapping("/save")
 public String onSave(@ModelAttribute RtoDto dto,Model model) {
 	List<RtoDto> dtos=ser.findAll();
+	if(!dtos.isEmpty())
+	{
 	for(RtoDto rto : dtos) {
 		if(rto.getEmail().equalsIgnoreCase(dto.getEmail())) {
 			model.addAttribute("err", "*Email is already exists");
@@ -60,6 +78,10 @@ public String onSave(@ModelAttribute RtoDto dto,Model model) {
 	}
 }
 }
+	}
+	else {
+		Set<ConstraintViolation<RtoDto>> voilations= ser.onSave(dto);
+	}
 	return "signup";
 }
 
@@ -83,7 +105,7 @@ public String onSave(@ModelAttribute UserDto udto,Model model) {
 			 model.addAttribute("uDto", udto);*/
 			// return "userapplication"; }
 		// }
-		 
+		  
 	return "userapplication";
 		
 	}
@@ -92,7 +114,7 @@ public String onSave(@ModelAttribute UserDto udto,Model model) {
 @GetMapping("findAll")
 public String findAll(Model model) {
 	List<RtoDto> dto=ser.findAll();
-	System.out.println(dto.toString());
+	log.info(dto.toString());
 	model.addAttribute("dtos",dto);
 	return "findall";
 	}
@@ -180,7 +202,6 @@ if(ganavi.equalsIgnoreCase("sendOtp")) {
 		if (rtodto1.getEmail().equals(email)) {
 			rtoDto = rtodto1;
 			model.addAttribute("emailId", email);
-			System.out.println("********"+rtoDto);
 		}
 	}
 	// System.err.println(emailId + "my beautiful otp is " + otp);
@@ -189,11 +210,11 @@ if(ganavi.equalsIgnoreCase("sendOtp")) {
 	int randumNumber = (int) ((Math.random() * 90000) + 10000);
 	boolean mail = rtoMail.sendMail(email, String.valueOf(randumNumber));
 	// rtoDepartmentDTO = dto;
-	System.err.println("my otp is" + String.valueOf(randumNumber));
+	log.info("my otp is" + String.valueOf(randumNumber));
 	if (mail == true/* && rtoDto != null */) {
 		ser.updateOtpById(rtoDto, String.valueOf(randumNumber));
 		model.addAttribute("dt", rtoDto); 
-		System.out.println(rtoDto);
+		log.debug("{}"+rtoDto);
 		model.addAttribute("otp", "OTP sent");
 		return "admin";
 	}
@@ -202,8 +223,43 @@ if(ganavi.equalsIgnoreCase("sendOtp")) {
 					return "admin";
 			}
 		}else if (ganavi.equalsIgnoreCase("next")) {
-			RtoDto dto=ser.adminLogin(email, otp);
-			System.err.println("dto"+dto);
+
+			List <RtoDto> d=ser.findAll();
+			for(RtoDto rtoDto2:d) {
+				if(rtoDto2.getEmail().equals(email)) {
+					rtoDto=rtoDto2;
+				}
+			}
+			model.addAttribute("emailId", email);
+			if(rtoDto.getOtp().equalsIgnoreCase(otp)) {
+				rtoDto.setCount(0);
+				ser.updateLoginCount(rtoDto);
+				System.out.println("....................");
+				System.out.println("Correct Otp");
+				rtoDto.setAccountStatus("active");
+				return "adminprofile";
+				
+				
+			}else {
+				rtoDto.setCount(rtoDto.getCount()+1);
+				ser.updateLoginCount(rtoDto);
+				if(rtoDto.getCount()==3) {
+					model.addAttribute("adminloginblocked","Account Blocked" );
+					rtoDto.setAccountStatus("inactive");
+
+					
+				}else {
+					model.addAttribute("err", "wrong otp");
+				}
+				return "admin";
+			}
+			
+			
+		}
+return "adminprofile";
+			
+			/*RtoDto dto=ser.adminLogin(email, otp);
+			log.debug("dto{}"+dto);
 			if(dto!=null)
 			 {
 				model.addAttribute("dt", dto); 
@@ -211,12 +267,12 @@ if(ganavi.equalsIgnoreCase("sendOtp")) {
 				}else {
 			  model.addAttribute("message", "Otp is invalid");
 			
-		System.out.println(rtoDto);
+			  log.debug("rtodto{}"+rtoDto);
 return "adminprofile";
 	}
 		
 }
-return "adminprofile";
+return "adminprofile";*/
 }
 		
 
@@ -253,6 +309,21 @@ public String userLogin(@RequestParam String apporphone,@RequestParam String dob
 	}
 }
 
+
+
+@GetMapping("dlentry")
+public String dlEntry(@RequestParam String applicationNumber,Model model) {
+	UserDto udto=ser.dlEntry(applicationNumber);
+	
+	if(udto!=null) {
+		model.addAttribute("udt", udto);
+		return "dl";
+	}else {
+		model.addAttribute("invalid", "Invalid credentials");
+		return "dl";
+	}
+}
+
 @GetMapping("seachbystate")
 public String searchByState(@RequestParam String state,Model model) {
 	List<RtoDto> dto=ser.searchByState(state);
@@ -262,13 +333,23 @@ public String searchByState(@RequestParam String state,Model model) {
 
 @GetMapping("userState")
 public String userState(@RequestParam String state,Model model) {
-	System.out.println("search by state......");
+	log.info("search by state......");
 	List<UserDto> udto=ser.searchByUserState(state);
 	model.addAttribute("ustate",udto);
-	System.out.println(udto);
+	  log.debug("userdto{}"+udto);
+
 	return "profile";
 }
 
+@GetMapping("llrdetails")
+public String llrDetails(@RequestParam String state,Model model) {
+	log.info("search by state......");
+	List<UserDto> udto=ser.searchByUserState(state);
+	model.addAttribute("ustate",udto);
+	  log.debug("userdto{}"+udto);
+
+	return "llr";
+}
 
 @GetMapping("updateUserStatus")
 public String userStatus(@RequestParam int id,Model model) {
@@ -285,6 +366,8 @@ public String userStatus(@RequestParam int id,Model model) {
 	}
 	}
 
+
+
 @GetMapping("pass")
 public String forgotPass(@RequestParam String email,@RequestParam String otp, Model model,String navi) {
 	RtoDto rtoDto = null;
@@ -294,7 +377,6 @@ if(navi.equalsIgnoreCase("SendOtp")) {
 		if (rtodto1.getEmail().equals(email)) {
 			rtoDto = rtodto1;
 			model.addAttribute("emailId", email);
-			System.out.println("********"+rtoDto);
 		}
 	}
 	// System.err.println(emailId + "my beautiful otp is " + otp);
@@ -303,11 +385,11 @@ if(navi.equalsIgnoreCase("SendOtp")) {
 	int randumNumber = (int) ((Math.random() * 90000) + 10000);
 	boolean mail = rtoMail.sendMail(email, String.valueOf(randumNumber));
 	// rtoDepartmentDTO = dto;
-	System.err.println("my otp is" + String.valueOf(randumNumber));
+	log.info("my otp is" + String.valueOf(randumNumber));
 	if (mail == true/* && rtoDto != null */) {
 		ser.updateOtpById(rtoDto, String.valueOf(randumNumber));
 		model.addAttribute("dt", rtoDto); 
-		System.out.println(rtoDto);
+		log.debug("{}"+rtoDto);
 		model.addAttribute("otp", "OTP sent");
 		return "forgotpassword";
 	}
@@ -317,7 +399,7 @@ if(navi.equalsIgnoreCase("SendOtp")) {
 			}
 		}else if (navi.equalsIgnoreCase("next")) {
 			RtoDto dto=ser.forgotPass(email, otp);
-			System.err.println("dto"+dto);
+			log.debug("dto{}"+dto);
 			if(dto!=null)
 			 {
 				model.addAttribute("dt", dto); 
@@ -325,7 +407,7 @@ if(navi.equalsIgnoreCase("SendOtp")) {
 				}else {
 			  model.addAttribute("message", "Otp is invalid");
 			
-		System.out.println(rtoDto);
+			  log.debug("dto{}"+rtoDto);
 return "newpassword";
 	}
 		}
@@ -366,6 +448,16 @@ public String updateOtp(@ModelAttribute RtoDto rtoDto,@RequestParam String otp,M
 		}
 		return "newpassword";
 	}
+
+
+@GetMapping("findApplication")
+public String findApplication(@RequestParam String applicationNumber,Model model) {
+	UserDto udto=ser.findApplication(applicationNumber);
+	model.addAttribute("app",udto.getApplicationNumber() );
+	model.addAttribute("dto", udto);
+	return "dl";
+}
+
 
 }
 

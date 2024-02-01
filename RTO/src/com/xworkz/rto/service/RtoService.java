@@ -28,6 +28,10 @@ public abstract boolean updateStatus(String applicationNumber);
 public abstract boolean updateById(int id);
 public boolean updateOtpById(RtoDto rtoDto,String otp);
 public boolean updatePassword(RtoDto rtoDto,String password,String confirmPassword);
+public boolean updateLoginCount(RtoDto rtoDto);
+public UserDto dlEntry(String applicationNumber) ;
+public UserDto findApplication(String applicationNumber) ;
+
 
 /*
  * public RtoDto checkotp(String email, String otp) ;

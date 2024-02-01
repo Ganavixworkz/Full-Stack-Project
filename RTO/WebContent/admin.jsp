@@ -65,8 +65,9 @@
 				<label class="form-label">OTP</label> <input type="text"
 					name="otp" class="form-control" >
 					</div>
+					<h1>${err}</h1>
 							<div class="mb-3">
-					
+					<h1>${adminloginblocked}</h1>
 								<input type="submit" value="next" name="ganavi" class="btn btn-success"/>
 					</div>
 			

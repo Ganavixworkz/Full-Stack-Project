@@ -35,6 +35,7 @@ private boolean organDonation;
 private String applicationNumber;
 private String status;
 private String otp;
+private String file;
 
 
 

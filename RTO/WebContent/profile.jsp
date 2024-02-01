@@ -72,54 +72,38 @@
  --%>  	<tr>
 		    	
 		    <td>${Dto.firstName}</td>	
-		    <td>${Dto.lastName}</td>	
+		    <td>${Dto.lastName}</td>
+		    		    <td>${Dto.dob}</td>	
+		    			    <td>${Dto.email}</td>
+		    			    <td>${Dto.phoneNumber}</td>	
+		    			    		    <td>${Dto.state}</td>	
+		    			    		    <td>${Dto.district}</td>	
+		    	
 		    <td>${Dto.password}</td>	
 		    <td>${Dto.confirmPassword}</td>	
-		    <td>${Dto.dob}</td>	
-		    <td>${Dto.phoneNumber}</td>	
-		    		    <td>${Dto.state}</td>	
-		    		    <td>${Dto.district}</td>	
-		    
-		    <td>${Dto.email}</td>
-		    <td>${Dto.registeredDateTime}</td>
+		     <td>${Dto.registeredDateTime}</td>
 		    </tr>
 		    </table>
 		    
 		    
 	     <h1>${updateMessage}</h1>
  	    
- 				     <form action="userState" method="get">
- 
-				    <h1 class="text-center">LLR detail</h1>
-		
-		<table class="table table-bordered pd-5">
-			
-				<tr>
-					<th>FirstName</th>
-					<th>email</th>
-					<th>state</th>
-					<th>status</th>
-					<th>applicationNumber</th>
-					</tr>
-					 	              										    	
-					
-				<c:forEach items="${udtos}" var="s">
- 	              
-   <tr>
-		    	               <td>${s.firstName}</td>
-		    			    	<td>${s.email}</td>
-		    			    	<td>${s.state}</td>
-		    			    	<td>${s.status}</td>
-		    			    	<td>${s.applicationNumber}</td>
-		    			    	<td><font color="blue">${s.status}</font></td>
-		    			    	<td><a href=updateUserStatus?id=${s.id}>Approve</a></td>
-		    			    	</tr>
-    			    	</c:forEach>
-     		 	    	</table>
-		    
-	</div>
-		</form>
-	
-	<%@include file="footer.jsp"%>
+    <form action="llrdetails" method="get">
+     
+  <label><b>Licence</b></label>
+  <select name="licenceType" id="">
+  <option value="" disabled selected>Select</option>
+    <option value="LL">Learner Licence</option>
+    <option value="DL">Driver Licence</option>
+    </select>
+  <br><br>
+  <input type="submit" value="Submit">
+</form>
+
+
+   <br>
+
+
+<%@include file="footer.jsp"%>
 </body>
 </html>

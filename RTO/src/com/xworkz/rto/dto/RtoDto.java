@@ -46,5 +46,9 @@ private String district;
 private String email;
 private LocalDateTime registeredDateTime;
 private String otp;
+private int count;
+private String accountStatus;
+private String licenceType;
+
 
 }

@@ -51,7 +51,12 @@ public class RtoEntity {
     private LocalDateTime registeredDateTime;
 	@Column(name="OTP")
 	private String otp;
+	@Column(name="Count")
+	private int count;
+	@Column(name="AccountStatus")
+	private String accountStatus;
 
+	private String licenceType;
 
 	}
 

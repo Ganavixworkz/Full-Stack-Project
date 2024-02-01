@@ -301,6 +301,7 @@ function handleAge() {
     </div>
     
     
+    
     <hr>
     <h5 style="color:red;">Fill-up above details before submitting the application</h5>
     <h5>1. I am willing to donate my organs,in case of accidental death?
@@ -323,11 +324,18 @@ function handleAge() {
 </div> 
     </div>
     </h5>
+    
   <div class="col-12">
     <button class="btn btn-primary" type="submit">Submit</button>
-  </div>
+    
+<!--     			<input type="submit" value="sendOtp" name="ganavi" class="btn btn-success"/>
+ -->    
+  </div> 
   </div>
 </div>
 </form>
+
+
+    
 </body>
 </html>

@@ -21,8 +21,12 @@ import lombok.Data;
 	@NamedQuery(name="userFindAll",query = "select entity from UserEntity entity"),
 	@NamedQuery(name="userLogin",query="select entity from  UserEntity entity where"
 			+ " entity.applicationNumber=:aporpn or entity.phoneNumber=:aporpn and entity.dob=:db"),
+	@NamedQuery(name="dlEntry",query="select entity from  UserEntity entity where"
+			+ " entity.applicationNumber=:ap "),
 	@NamedQuery(name = "searchByUserState" ,query = "select e from UserEntity e where e.state=:llrstate"),
-	@NamedQuery(name="updatestatus",query = "update UserEntity e set e.status='Approved' where e.applicationNumber=:appNum ")
+	@NamedQuery(name="updatestatus",query = "update UserEntity e set e.status='Approved' where e.applicationNumber=:appNum "),
+	@NamedQuery(name="findApplication",query = "select entity from UserEntity entity where entity.applicationNumber=:app ")
+
 })
 
 public class UserEntity {
@@ -102,6 +106,9 @@ public class UserEntity {
 	
 	@Column(name="OTP")
 	private String otp;
+	
+	private String file;
+
 
 
 

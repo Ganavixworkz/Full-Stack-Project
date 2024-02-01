@@ -15,17 +15,26 @@ import org.springframework.stereotype.Repository;
 
 import com.xworkz.rto.dto.RtoDto;
 import com.xworkz.rto.dto.UserDto;
+import com.xworkz.rto.entity.DlEntity;
 import com.xworkz.rto.entity.RtoEntity;
 import com.xworkz.rto.entity.UserEntity;
+import com.xworkz.rto.util.Encrypted;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Repository
+@Slf4j
 public class RtoRepositoryImplementation implements RtoRepository{
+	
 	@Autowired
     EntityManagerFactory factory;
 	
+	@Autowired
+	Encrypted encrypt1;
+	
 	@Override
 	public boolean onSave(RtoDto dto) {
-		System.out.println("Repo on save method");
+		log.info("Repo on save method");
 		RtoEntity entity=new RtoEntity();
 		BeanUtils.copyProperties (dto, entity); 
 		entity.setRegisteredDateTime(LocalDateTime.now());
@@ -34,6 +43,7 @@ public class RtoRepositoryImplementation implements RtoRepository{
 		EntityTransaction transaction = manager.getTransaction();
 		transaction.begin();
 		manager.persist(entity);
+		System.err.println(""+entity);
 		transaction.commit();
 		manager.close();
 		return true;
@@ -41,7 +51,7 @@ public class RtoRepositoryImplementation implements RtoRepository{
 
 	@Override
 	public boolean onSave(UserDto udto) {
-		System.out.println(" UserDto Repo on save method");
+		log.info(" UserDto Repo on save method");
 		UserEntity uentity=new UserEntity();
 		BeanUtils.copyProperties (udto, uentity); 
 		uentity.setRegisteredDateTime(LocalDateTime.now());
@@ -54,12 +64,13 @@ public class RtoRepositoryImplementation implements RtoRepository{
 		manager.close();
 		return true;
 	}
+	
 	@Override
 	public List<RtoEntity> findAll() {
 		EntityManager manager = factory.createEntityManager();
 		Query query=manager.createNamedQuery("findAll");
 		List<RtoEntity> list=query.getResultList();
-		System.out.println(list.toString());
+		log.info(list.toString());
 		return list;
 		}
 	
@@ -68,7 +79,7 @@ public class RtoRepositoryImplementation implements RtoRepository{
 		EntityManager manager = factory.createEntityManager();
 		Query query=manager.createNamedQuery("userFindAll");
 		List<UserEntity> ulist=query.getResultList();
-		System.out.println(ulist.toString());
+		log.info(ulist.toString());
 		return ulist;
 		}
 
@@ -85,15 +96,14 @@ public class RtoRepositoryImplementation implements RtoRepository{
 		}
 		
 	}
-		public RtoEntity adminLogin(String email, String otp) {
+		
+	public RtoEntity adminLogin(String email, String otp) {
 			EntityManager manager = factory.createEntityManager();
 			Query loginQuery = manager.createNamedQuery("adminOtpLogin");
 			loginQuery.setParameter("eml", email);
 			//loginQuery.setParameter("pwd", password);
 			loginQuery.setParameter("otp", otp);
-
-			
-			try {
+try {
 				return (RtoEntity) loginQuery.getSingleResult();
 			} catch (NoResultException e) {
 			return null;
@@ -108,7 +118,6 @@ public class RtoRepositoryImplementation implements RtoRepository{
 			//loginQuery.setParameter("pwd", password);
 			loginQuery.setParameter("otp", otp);
 
-			
 			try {
 				return (RtoEntity) loginQuery.getSingleResult();
 			} catch (NoResultException e) {
@@ -135,7 +144,7 @@ public class RtoRepositoryImplementation implements RtoRepository{
 			Query q=manager.createNamedQuery("searchByState");
 			q.setParameter("st",state);
 			List<RtoEntity> list=q.getResultList();
-			System.out.println(list.toString());
+			log.info(list.toString());
 			return list;
 			
 		}
@@ -146,7 +155,7 @@ public class RtoRepositoryImplementation implements RtoRepository{
 			Query q=manager.createNamedQuery("searchByUserState");
 			q.setParameter("llrstate",state);
 			List<UserEntity> userlist=q.getResultList();
-			System.out.println(userlist.toString());
+			log.info(userlist.toString());
 			return userlist;
 			}
 
@@ -173,7 +182,7 @@ public class RtoRepositoryImplementation implements RtoRepository{
 				manager.close();
 				return true;
 				}else {
-				System.out.println("Invalid id");
+					log.info("Invalid id");
 			
 			return false;
 		}
@@ -197,12 +206,54 @@ return true;
 			EntityManager manager=factory.createEntityManager();
 RtoEntity entity=new RtoEntity();
 BeanUtils.copyProperties(rtoDto, entity);
+entity.setPassword(encrypt1.encrypt(rtoDto.getPassword()));
+entity.setConfirmPassword(encrypt1.encrypt(rtoDto.getConfirmPassword()));
+
 manager.getTransaction().begin();
 manager.merge(entity);
 manager.getTransaction().commit();
 manager.close();
 return true;
 		}
+
+		@Override
+		public boolean updateLoginCount(RtoDto rtoDto) {
+			EntityManager manager=factory.createEntityManager();
+			RtoEntity entity=new RtoEntity();
+			BeanUtils.copyProperties(rtoDto, entity);
+			manager.getTransaction().begin();
+			manager.merge(entity);
+			manager.getTransaction().commit();
+			manager.close();
+			return true;
+		}
+		
+		public UserEntity dlEntry(String applicationNumber) {
+			EntityManager manager = factory.createEntityManager();
+			Query loginQuery = manager.createNamedQuery("dlEntry");
+			loginQuery.setParameter("ap", applicationNumber);
+          try {
+				return (UserEntity) loginQuery.getSingleResult();
+			} catch (NoResultException e) {
+			return null;
+		}
+		}
+
+		@Override
+		public UserEntity findApplication(String applicationNumber) {
+			EntityManager manager = factory.createEntityManager();
+			Query loginQuery = manager.createNamedQuery("findApplication");
+			loginQuery.setParameter("app", applicationNumber);
+			UserEntity entity=(UserEntity) loginQuery.getSingleResult();
+			
+			return entity;
+		}
+		
+		
+		
+
+	
+
 		
 		/*public RtoEntity checkotp(String email, String otp) {
 			EntityManager manager = factory.createEntityManager();
@@ -215,7 +266,9 @@ return true;
 				return null;
 			}*/
 			
-		}
+		} 
+		
+
 
 		
 

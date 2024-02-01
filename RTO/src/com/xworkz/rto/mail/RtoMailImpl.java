@@ -6,7 +6,10 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 
 import com.xworkz.rto.configuration.MailConfiguration;
+
+import lombok.extern.slf4j.Slf4j;
 @Service
+@Slf4j
 public class RtoMailImpl implements RtoMail{
 	@Autowired
 	private MailConfiguration mailcon;
@@ -18,7 +21,7 @@ public class RtoMailImpl implements RtoMail{
 		mailMessage.setSubject("OTP for Login");
 		mailMessage.setText("Otp for your login :" +otp );
 		mailcon.getJavaMailSender().send(mailMessage);
-		System.out.println("mail sent successfully");
+		log.info("mail sent successfully");
 		return true;
 	}
 }
